@@ -1,0 +1,19 @@
+{
+  "name": "varnishopt",
+  "version": "0.0.1",
+  "description": "Build Varnish commands using an easy interface",
+  "main": "index.js",
+  "scripts": {
+    "varnishopt": "./bin/varnishopt",
+    "debug": "node --inspect-brk ./bin/varnishopt",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "inquirer": "^5.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.0"
+  }
+}
