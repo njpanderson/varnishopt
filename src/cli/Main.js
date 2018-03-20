@@ -1,21 +1,29 @@
 const inquirer = require('inquirer');
-const chalk = require('chalk');
 
+const App = require('../App');
 const BaseCLI = require('./BaseCLI');
 const questions = require('../lib/questions');
 const router = require('./routes/router');
-const i18n = require('../lang/i18n');
 
 class Main extends BaseCLI {
+	constructor() {
+		super();
+
+		this.app = new App();
+	}
+
 	start() {
-		this.write(i18n.t('welcome', chalk.yellow('varnishopt')));
+		this.clear();
+		this.writeHead();
+		// this.writeStatus('varnishopt version ' + process.env.npm_package_version);
 
 		// First, get the main route...
 		inquirer.prompt(questions.route)
 			.then((answer) => {
 				// ... Then, load the required router class
 				const route = new router[answer.route]();
-				route.start();
+				route.start()
+					.then(this.app.run);
 			});
 	}
 };

@@ -1,3 +1,5 @@
+const chalk = require('chalk');
+
 const config = require('../lib/config');
 
 /**
@@ -45,7 +47,8 @@ class i18n {
 	 * in the string value.
 	 */
 	t(key) {
-		let string = this.getLocalisedString(key);
+		let string = this.getLocalisedString(key),
+			reChalk = RegExp(/c\{([a-z]+):(([a-z]+):)?([^:\}]+)\}/, 'g');
 
 		if (i18n.tests.has_placeholders.test(string)) {
 			[...arguments].slice(1).forEach((value, index) => {
@@ -53,11 +56,25 @@ class i18n {
 					RegExp('\\$\\{' + (index + 1) + '\\}', 'g'),
 					value
 				);
+
 				string = string.replace(
 					RegExp('p\\{' + (index + 1) + '\\:([^:]*)\\:([^\\}]*)\\}', 'g'),
 					(typeof value === 'number' && value !== 1) ? '$2' : '$1'
 				);
 			});
+
+			// Colourise text defined as (c)halk replacements
+			string = string.replace(
+				reChalk,
+				(match, p1, p2, p3, p4, offset, str) => {
+					if (p3) {
+						p3 = p3.charAt(0).toUpperCase() + p3.slice(1);
+						return chalk[p1]['bg' + p3].call(chalk, p4);
+					} else {
+						return chalk[p1].call(chalk, p4);
+					}
+				}
+			);
 		}
 
 		return string;
@@ -110,7 +127,7 @@ class i18n {
 };
 
 i18n.tests = {
-	has_placeholders: /(\$|p)\{\d+\}/
+	has_placeholders: /[\$pc]+\{.+\}/
 };
 
 module.exports = (new i18n());
