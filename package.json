@@ -1,7 +1,7 @@
 {
   "name": "varnishopt",
   "version": "0.0.1",
-  "description": "Build Varnish commands using an easy interface",
+  "description": "Build Varnish commands using an intuitive CLI",
   "main": "index.js",
   "scripts": {
     "varnishopt": "./bin/varnishopt",
