@@ -1,5 +1,3 @@
-const inquirer = require('inquirer');
-
 const App = require('../App');
 const BaseCLI = require('./BaseCLI');
 const questions = require('../lib/questions');
@@ -8,6 +6,8 @@ const router = require('./routes/router');
 class Main extends BaseCLI {
 	constructor() {
 		super();
+
+		this.runProcess = this.runProcess.bind(this);
 
 		this.app = new App();
 	}
@@ -18,13 +18,22 @@ class Main extends BaseCLI {
 		// this.writeStatus('varnishopt version ' + process.env.npm_package_version);
 
 		// First, get the main route...
-		inquirer.prompt(questions.route)
+		this.prompt(questions.route)
 			.then((answer) => {
 				// ... Then, load the required router class
-				const route = new router[answer.route]();
+				const route = new router[answer.route]({
+					onComplete: this.runProcess
+				});
 				route.start()
 					.then(this.app.run);
 			});
+	}
+
+	runProcess(procName, answers) {
+		this.app.launchCommand(
+			procName,
+			this.convertAnswersToArgs(answers)
+		);
 	}
 };
 

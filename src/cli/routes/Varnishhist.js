@@ -1,10 +1,10 @@
 const BaseRoute = require('./BaseRoute');
 
 class Varnishhist extends BaseRoute {
-	constructor() {
-		super({
+	constructor(options) {
+		super(Object.assign({}, {
 			procName: 'varnishhist'
-		});
+		}, options));
 	}
 };
 

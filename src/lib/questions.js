@@ -63,15 +63,9 @@ module.exports = {
 		message: i18n.t('filter_query')
 	},
 
-	test: {
+	ncsa_format: {
 		type: 'input',
-		name: 'test',
-		message: 'Just a test question:'
-	},
-
-	test2: {
-		type: 'input',
-		name: 'test2',
-		message: 'Test question #2:'
+		name: 'ncsa_format',
+		message: i18n.t('ncsa_format')
 	}
 };

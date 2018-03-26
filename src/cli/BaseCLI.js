@@ -1,8 +1,10 @@
 const os = require('os');
-// const inquirer = require('inquirer');
+const inquirer = require('inquirer');
 const boxen = require('boxen');
 const chalk = require('chalk');
 
+const questions = require('../lib/questions');
+const utils = require('../lib/utils');
 const i18n = require('../lang/i18n');
 
 class BaseCLI {
@@ -27,6 +29,8 @@ class BaseCLI {
 				align: 'center'
 			}
 		}
+
+		this.answers = [];
 	}
 
 	/**
@@ -106,6 +110,60 @@ class BaseCLI {
 		}
 
 		return result.join(os.EOL);
+	}
+
+	/**
+	 * Ask the user a question using inquirer.
+	 * @param {object} question - Question object, from the questions.js file
+	 */
+	prompt(question) {
+		if (!question.name) {
+			throw new Error('Missing .name property. Cannot send unnamed question to prompt().');
+		}
+
+		// Use inquirer to ask the question
+		return inquirer.prompt(question);
+	}
+
+	promptPoint(point) {
+		let question = questions[point.question];
+
+		return this.prompt(question)
+			.then((answer) => {
+				// Save it to a global property
+				this.answers.push({ question, point, answer });
+
+				return answer;
+			});
+	}
+
+	/**
+	 * @description
+	 * Converts a set of answers provided by the CLI into a process arguments
+	 * object.
+	 * @param {object} answers - Answers as given from BaseRoute.
+	 */
+	convertAnswersToArgs(answers) {
+		let args = [];
+
+		answers.forEach((answer) => {
+			let answerValue = answer.answer[answer.question.name],
+				argValue = answer.point.args;
+
+			if (typeof answer.point.args === 'object') {
+				// Args is an object - use the answer to select a key
+				argValue = answer.point.args[answerValue];
+			}
+
+			if (argValue) {
+				// Replace argValue placeholders with specific values
+				argValue = argValue.replace('$1', utils.escapeArgValue(answerValue));
+
+				args.push(argValue);
+			}
+		});
+
+		return args;
 	}
 }
 

@@ -1,5 +1,6 @@
-const inquirer = require('inquirer');
 const boxen = require('boxen');
+const path = require('path');
+const glob = require('glob');
 // const crypto = require('crypto');
 
 const BaseCLI = require('../BaseCLI');
@@ -11,7 +12,15 @@ class BaseRoute extends BaseCLI {
 	constructor(options) {
 		super();
 
-		this.options = options;
+		this.processPointAnswer = this.processPointAnswer.bind(this);
+
+		this.options = Object.assign({}, {
+			onComplete: null
+		}, options);
+
+		this.globOptions = {
+			root: path.resolve(process.cwd())
+		};
 
 		if (!routes[this.options.procName]) {
 			throw new Error(
@@ -42,15 +51,17 @@ class BaseRoute extends BaseCLI {
 
 			// Ask about launching from an existing template or creating an option set
 			// using the defined process route
-			inquirer.prompt(questions.make_method)
+			this.prompt(questions.make_method)
 				.then((answer) => {
 					if (answer.make_method === 'template') {
 						// TODO: template route
 					} else if (answer.make_method === 'options') {
 						// Show the first route point
-						this.showRoutePoint(this.route[0]);
+						this.showRoutePoint(this.route[0])
+							.then(this.processPointAnswer);
 					}
-				});
+				})
+				.catch(reject);
 		});
 	}
 
@@ -59,33 +70,32 @@ class BaseRoute extends BaseCLI {
 	 * @param {object} point - The route point to show.
 	 */
 	showRoutePoint(point) {
-		if (point.description) {
-			this.write(i18n.t(point.description));
-		}
+		return new Promise((resolve, reject) => {
+			this.clear();
+			this.writeHead(
+				this.options.procName +
+				' ' +
+				this.convertAnswersToArgs(this.answers).join(' ')
+			);
 
-		if (point.reference) {
-			// TODO: load template and show
-			this.write(boxen('(reference goes here)', this.boxenOpts.reference));
-		}
+			if (point.description) {
+				this.write(i18n.t(point.description));
+			}
 
-		inquirer.prompt(questions[point.question])
-			.then((answers) => {
-				let nextPoint, divergence;
+			if (point.reference) {
+				// TODO: load template and show
+				this.write(boxen(
+					this.getReferenceFile(point.reference),
+					this.boxenOpts.reference
+				));
+			}
 
-				if (point.routes) {
-					// Point has sub-routes, use the answer as the divergence factor
-					divergence = answers[point.question];
-				}
-
-				nextPoint = this.getNextRoutePoint(point, divergence);
-
-				if (nextPoint) {
-					// Show the next point
-					this.showRoutePoint(nextPoint);
-				} else {
-					// End reached - compile the options and execute the process
-				}
-			});
+			this.promptPoint(point)
+				.then((answers) => {
+					resolve({ point, answers });
+				})
+				.catch(reject);
+		});
 	}
 
 	/**
@@ -158,6 +168,30 @@ class BaseRoute extends BaseCLI {
 		}
 	}
 
+	processPointAnswer(result) {
+		let nextPoint, divergence;
+
+		if (result.point.routes) {
+			// Point has sub-routes, use the answer as the divergence factor
+			divergence = result.answers[result.point.question];
+		}
+
+		// Get next point in the route
+		nextPoint = this.getNextRoutePoint(result.point, divergence);
+
+		if (nextPoint) {
+			// Show the next point
+			this.showRoutePoint(nextPoint)
+				.then(this.processPointAnswer);
+		} else {
+			// End reached - compile the options and execute the process
+			console.log('end');
+			if (typeof this.options.onComplete === 'function') {
+				this.options.onComplete(this.options.procName, this.answers);
+			}
+		}
+	}
+
 	/**
 	 * Generates maps within each route point for simple waypointing during traversal.
 	 * @param {object} route - Route data to map.
@@ -200,15 +234,6 @@ class BaseRoute extends BaseCLI {
 	// 	hash.update(JSON.stringify(point));
 	// 	return hash.digest('hex');
 	// }
-
-	/**
-	 * Launch a process given options.
-	 * @param {object} opts - Opts object - key/value pairs of option names
-	 * and their optional values.
-	 */
-	launchCommand(procName, opts) {
-
-	}
 
 	/**
 	 * Launch a process given a launch template.

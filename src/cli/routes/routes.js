@@ -44,17 +44,16 @@ module.exports = {
 						// Shown after the description, inside a boxen box
 						reference: 'filter_query',
 						args: '-q \'$1\''
-					},
-					{
-						// Point
-						question: 'test'
 					}
 				]
 			}
 		},
 		{
 			// Point
-			question: 'test2'
+			question: 'ncsa_format',
+			description: 'ncsa_format_desc',
+			reference: 'ncsa_format',
+			args: '-f \'$1\''
 		}
 	],
 	varnishlog: [

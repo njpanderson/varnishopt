@@ -11,7 +11,8 @@ const config = require('../lib/config');
 class i18n {
 	constructor() {
 		// Set default locale
-		this._locale = 'en_gb';
+		this.defaultLocale = 'en_gb';
+		this.locale = this.defaultLocale;
 
 		this.strings = {
 			base: require(`./en_gb`),
@@ -33,7 +34,7 @@ class i18n {
 
 		try {
 			this.strings.localised = require(fileName);
-			this._locale = locale;
+			this.locale = locale;
 			return;
 		} catch (e) {
 			throw new Error(this.t('no_locale', locale));

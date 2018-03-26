@@ -21,5 +21,7 @@ module.exports = {
 	'query_manual': 'Enter a query',
 	'filter_query_list': 'Choose a pre-made query to filter by:',
 	'filter_query': 'Enter a filter query:',
-	'filter_query_desc': 'Quick filter query reference:'
+	'filter_query_desc': 'Quick filter query reference:',
+	'ncsa_format': 'Enter a display format',
+	'ncsa_format_desc': 'Format reference:'
 }
