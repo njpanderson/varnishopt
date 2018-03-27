@@ -1,1 +1,17 @@
-(filter query reference info to be added here!)
+A query expression consists of record selection criteria, an operator and a
+match value:
+    <expr <record selection criteria> <operator> <operand>>[ (boolean) <expr>]
+    e.g: ReqUrl ~ "foo" and ReqHeader:cookie
+--------------------------------------------------------------------------------
+Available operators:            | Boolean functions:
+    == != < <= > >= (Numeric)   |     not   (Inverts <expr>)
+    eq ne           (String)    |     and   (<expr2> and <expr2> must be true)
+    ~ !~            (Regex)     |     or    (<expr2> or <expr2> must be true)
+--------------------------------------------------------------------------------
+Examples:
+    ReqURL eq "/foo"              Request contains a URL equal to "/foo".
+    ReqHeader:cookie              Request contains a "Cookie" header.
+    not ReqHeader:cookie          Request does not contain a "Cookie" header.
+    Timestamp:Process[2] > 0.8    Request handling took longer than .8ms.
+    BerespStatus == 500           Backend response was equal to 500.
+    ReqURL ~ "gif$"               Request URL ends with "gif"

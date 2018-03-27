@@ -1,6 +1,4 @@
 const boxen = require('boxen');
-const path = require('path');
-const glob = require('glob');
 // const crypto = require('crypto');
 
 const BaseCLI = require('../BaseCLI');
@@ -17,10 +15,6 @@ class BaseRoute extends BaseCLI {
 		this.options = Object.assign({}, {
 			onComplete: null
 		}, options);
-
-		this.globOptions = {
-			root: path.resolve(process.cwd())
-		};
 
 		if (!routes[this.options.procName]) {
 			throw new Error(
@@ -71,31 +65,56 @@ class BaseRoute extends BaseCLI {
 	 */
 	showRoutePoint(point) {
 		return new Promise((resolve, reject) => {
-			this.clear();
-			this.writeHead(
-				this.options.procName +
-				' ' +
-				this.convertAnswersToArgs(this.answers).join(' ')
-			);
+			this.pointIsValid(point)
+				.then(() => {
+					this.clear();
+					this.writeHead(
+						this.options.procName +
+						' ' +
+						this.convertAnswersToArgs(this.answers).join(' ')
+					);
 
-			if (point.description) {
-				this.write(i18n.t(point.description));
-			}
+					if (point.description) {
+						this.write(i18n.t(point.description));
+					}
 
-			if (point.reference) {
-				// TODO: load template and show
-				this.write(boxen(
-					this.getReferenceFile(point.reference),
-					this.boxenOpts.reference
-				));
-			}
+					if (point.reference) {
+						this.getReferenceFile(point.reference)
+							.then((contents) => {
+								this.write(boxen(
+									contents,
+									this.boxenOpts.reference
+								));
 
-			this.promptPoint(point)
-				.then((answers) => {
-					resolve({ point, answers });
+								this.showRoutePrompt(point, resolve, reject);
+							})
+							.catch((error) => {
+								reject(error);
+							});
+					} else {
+						// Show the point using the local resolve/reject
+						this.showRoutePrompt(point, resolve, reject);
+					}
 				})
-				.catch(reject);
+				.catch(() => {
+					// If the point isn't valid for showing, immediately resolve
+					return resolve({ point });
+				});
 		});
+	}
+
+	/**
+	 * Show a single route point prompt
+	 * @param {object} point - The point to show.
+	 * @param {function} resolve - Resolver
+	 * @param {function} reject - Rejecter
+	 */
+	showRoutePrompt(point, resolve, reject) {
+		this.promptPoint(point)
+			.then((answers) => {
+				resolve({ point, answers });
+			})
+			.catch(reject);
 	}
 
 	/**
@@ -140,6 +159,24 @@ class BaseRoute extends BaseCLI {
 		return null;
 	}
 
+	pointIsValid(point) {
+		return new Promise((resolve, reject) => {
+			let valid = true;
+
+			this.checkVersion(point.version)
+				.then((test) => {
+					valid = !test.satisfies ? false : valid;
+				})
+				.then(() => {
+					if (valid) {
+						resolve();
+					} else {
+						reject();
+					}
+				});
+		});
+	}
+
 	/**
 	 * Returns a route branch given a map
 	 * @param {array} map - Map to search with
@@ -171,7 +208,7 @@ class BaseRoute extends BaseCLI {
 	processPointAnswer(result) {
 		let nextPoint, divergence;
 
-		if (result.point.routes) {
+		if (result.answers && result.point.routes) {
 			// Point has sub-routes, use the answer as the divergence factor
 			divergence = result.answers[result.point.question];
 		}

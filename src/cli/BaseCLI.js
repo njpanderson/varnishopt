@@ -1,9 +1,15 @@
 const os = require('os');
 const inquirer = require('inquirer');
+const semver = require('semver');
 const boxen = require('boxen');
 const chalk = require('chalk');
+const path = require('path');
+const fs = require('fs');
+const glob = require('glob');
+const exec = require('child_process').exec;
 
 const questions = require('../lib/questions');
+const constants = require('../lib/constants');
 const utils = require('../lib/utils');
 const i18n = require('../lang/i18n');
 
@@ -26,10 +32,16 @@ class BaseCLI {
 				borderStyle: 'classic',
 				dimBorder: true,
 				float: 'center',
-				align: 'center'
+				align: 'left'
 			}
 		}
 
+		this.globOptions = {
+			cwd: path.dirname(__dirname),
+			absolute: true
+		};
+
+		this.varnishVersion = null;
 		this.answers = [];
 	}
 
@@ -164,6 +176,92 @@ class BaseCLI {
 		});
 
 		return args;
+	}
+
+	/**
+	 * @description
+	 * Attempts to find a reference text file and return it.
+	 * Will use the current language, falling back to en_gb.
+	 * @param {string} name - Name of the reference file (before any extension)
+	 */
+	getReferenceFile(name) {
+		// TODO: make this work!
+		return new Promise((resolve, reject) => {
+			glob(
+				`lang/reference/${i18n.locale}/${name}.*`,
+				this.globOptions,
+				(error, files) => {
+					let contents;
+
+					if (error) {
+						reject(error);
+					}
+
+					if (files.length > 0) {
+						if (!(contents = fs.readFileSync(files[0], 'UTF-8'))) {
+							reject(`File "${files[0]}" could not be read.`);
+						}
+					} else {
+						reject(`Reference file for "${i18n.locale}/${name}" could not be found.`)
+					}
+
+					resolve(contents);
+				}
+			);
+		});
+	}
+
+	/**
+	 * @description
+	 * Test whether the currently installed version of Varnish is equal to or
+	 * greater than the version supplied.
+	 * @param {string} version - Minimum version to require
+	 */
+	checkVersion(version) {
+		if (!version) {
+			version = `>=${constants.cli.MIN_VARNISH_VERSION}`;
+		}
+
+		return this.getVarnishVersion(this.varnishVersion)
+			.then((varnishVersion) => {
+				this.varnishVersion = varnishVersion;
+
+				return {
+					varnishVersion: this.varnishVersion,
+					satisfies: semver.satisfies(this.varnishVersion, version)
+				};
+			});
+	}
+
+	/**
+	 * Retrieves the current version of Varnish within the installed environment.
+	 */
+	getVarnishVersion(version) {
+		return new Promise((resolve, reject) => {
+			if (version) {
+				return resolve(version);
+			}
+
+			// Get version from varnishd
+			exec('varnishd -V', (error, stdout, stderr) => {
+				let match;
+
+				if (error) {
+					reject(i18n.t('could_not_get_version'));
+				}
+
+				// Version data comes from stderr... Which is odd, but I'm sure
+				// there are reasons.
+				match = stderr.match(/varnish-(\d+\.\d+\.\d+)\s/);
+
+				if (match !== null) {
+					// Resolve to version match
+					resolve(match[1]);
+				} else {
+					reject(i18n.t('could_not_get_version'));
+				}
+			});
+		});
 	}
 }
 

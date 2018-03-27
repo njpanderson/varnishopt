@@ -17,7 +17,8 @@ module.exports = {
 				both: null,
 				client: '-c',
 				backend: '-b'
-			}
+			},
+			version: '>=4.1.9'
 		},
 		{
 			// Point
@@ -39,8 +40,6 @@ module.exports = {
 					{
 						// Point
 						question: 'filter_query',
-						// The i18n string to show before providing the question
-						description: 'filter_query_desc',
 						// Shown after the description, inside a boxen box
 						reference: 'filter_query',
 						args: '-q \'$1\''
@@ -51,9 +50,8 @@ module.exports = {
 		{
 			// Point
 			question: 'ncsa_format',
-			description: 'ncsa_format_desc',
 			reference: 'ncsa_format',
-			args: '-f \'$1\''
+			args: '-F \'$1\''
 		}
 	],
 	varnishlog: [

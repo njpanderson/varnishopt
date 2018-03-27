@@ -1,0 +1,22 @@
+NCSA format options available. Examples in (parentheses).
+Some format options change depending on whether client or backend mode is used.
+
+    %b Response size, in bytes      %D Time taken to serve the request
+    %H Request protocol (HTTP/1.0)  %h Remote host (IP)
+    %I Total bytes from client      %L Remote logname (Always '-')
+    %m Request method (GET)         %O Total bytes to client
+    %q Query string                 %r First request line
+    %s Status sent or from server   %t Request time received/sent
+    %T Request time elapsed         %U URL without query string
+    %u Remote auth'ed user
+
+To obtain the HTTP headers, replace "X" with the header name:
+    e.g. %{Accepts}i
+    %{X}i Request header.           %{X}o Response header.
+
+Extended variables (%{X}x) - Replace "X" with the following:
+    Varnish:time_firstbyte          TTFB to the client, in seconds.
+    Varnish:hitmiss                 Cache hit or miss.
+    Varnish:handling                Cache handling.
+    Varnish:side                    Backend or client side.
+    Varnish:vxid                    Transaction VXID.

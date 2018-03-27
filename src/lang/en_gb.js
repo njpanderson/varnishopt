@@ -21,7 +21,7 @@ module.exports = {
 	'query_manual': 'Enter a query',
 	'filter_query_list': 'Choose a pre-made query to filter by:',
 	'filter_query': 'Enter a filter query:',
-	'filter_query_desc': 'Quick filter query reference:',
 	'ncsa_format': 'Enter a display format',
-	'ncsa_format_desc': 'Format reference:'
+	'varnish_version_to_old': 'The varnish version in this environment (${1}) is too old. Please ensure that Varnish is at least version (${2}) or newer.',
+	'could_not_get_version': 'Could not get Varnish version. Is it installed?'
 }
